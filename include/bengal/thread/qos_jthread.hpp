@@ -9,6 +9,10 @@
 #include <type_traits>
 #include <utility>
 
+#if !defined(__cpp_lib_jthread) || __cpp_lib_jthread < 201911L
+#error "bengal::qos_jthread requires std::jthread and std::stop_token support"
+#endif
+
 #if defined(__APPLE__)
 #include <pthread.h>
 #include <sys/qos.h>

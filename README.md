@@ -18,6 +18,9 @@ performance rather than platform-specific performance claims.
 
 The library is header-only in the initial release.
 
+Supported toolchains must provide C++20 `std::jthread` and `std::stop_token`.
+Apple builds therefore require Xcode 16 or newer.
+
 ## Build
 
 With CMake 3.20 or newer:
