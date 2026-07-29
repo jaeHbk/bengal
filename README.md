@@ -61,6 +61,8 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) and
 interpretation rules are in [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
 Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md) and
 [docs/THREADING.md](docs/THREADING.md).
+Published `0.2` evidence is in
+[docs/PERFORMANCE_0.2.md](docs/PERFORMANCE_0.2.md).
 Release changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ## License

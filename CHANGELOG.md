@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.0 - 2026-07-29
+
+Performance-evidence milestone.
+
+### Added
+
+- Native p50/p95/p99/p99.9 sample-percentile and throughput reporting.
+- `qos_jthread` versus `std::thread` startup baselines.
+- Independent Google Benchmark cross-check suite.
+- Reproducible CI artifacts containing hardware metadata and raw benchmark
+  output.
+- Published `0.2` performance report with scope and limitations.
+
+### Changed
+
+- Benchmark methodology now distinguishes sampled run-average percentiles from
+  individual-operation latency distributions.
+- Established baseline CI runs 1,001 native samples and compares with
+  Boost.StaticString.
+
 ## 0.1.0 - 2026-07-29
 
 Initial Bengal release.
@@ -27,4 +47,3 @@ Initial Bengal release.
 
 Performance results remain workload- and hardware-specific. Bengal does not
 claim universal superiority over established alternatives.
-

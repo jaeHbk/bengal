@@ -17,7 +17,7 @@ overflow, lifetime, and platform behavior. It remains domain-neutral.
 
 Exit gate: all tests and sanitizers pass on supported platforms.
 
-## 0.2: Performance Evidence
+## 0.2: Performance Evidence (Complete)
 
 - Maintain a dependency-free benchmark harness and cross-check important
   results with Google Benchmark before publication.
