@@ -1,5 +1,7 @@
 # Bengal
 
+[![CI](https://github.com/jaeHbk/bengal/actions/workflows/ci.yml/badge.svg)](https://github.com/jaeHbk/bengal/actions/workflows/ci.yml)
+
 Bengal is a C++20 library for predictable-latency software. It provides small,
 explicit primitives for type-indexed dispatch, bounded text, bounded memory,
 and platform-aware worker threads.
@@ -59,6 +61,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) and
 interpretation rules are in [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
 Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md) and
 [docs/THREADING.md](docs/THREADING.md).
+Release changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
