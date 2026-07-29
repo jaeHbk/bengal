@@ -4,6 +4,7 @@
 #include <array>
 #include <charconv>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -177,16 +178,10 @@ benchmark_result run_benchmark(std::string_view name,
   return result;
 }
 
-double median(const std::vector<double>& sorted_values) {
-  const auto middle = sorted_values.size() / 2;
-  if (sorted_values.size() % 2 == 0) {
-    return (sorted_values[middle - 1] + sorted_values[middle]) / 2.0;
-  }
-  return sorted_values[middle];
-}
-
-double percentile_95(const std::vector<double>& sorted_values) {
-  const auto rank = (95 * sorted_values.size() + 99) / 100;
+double percentile(const std::vector<double>& sorted_values,
+                  double probability) {
+  const auto rank = static_cast<std::size_t>(
+      std::ceil(probability * static_cast<double>(sorted_values.size())));
   return sorted_values[std::max<std::size_t>(1, rank) - 1];
 }
 
@@ -207,17 +202,25 @@ void print_results(const std::vector<benchmark_result>& results,
             << "base_iterations=" << configuration.iterations << '\n'
             << "samples=" << configuration.samples << "\n\n"
             << std::left << std::setw(36) << "benchmark" << std::right
-            << std::setw(14) << "median ns/op" << std::setw(14) << "p95 ns/op"
-            << std::setw(14) << "min ns/op" << std::setw(14) << "iterations"
+            << std::setw(12) << "p50 ns/op" << std::setw(12) << "p95 ns/op"
+            << std::setw(12) << "p99 ns/op" << std::setw(12) << "p99.9"
+            << std::setw(14) << "median ops/s" << std::setw(12) << "iterations"
             << '\n';
 
   for (const auto& result : results) {
+    const auto p50 =
+        percentile(result.nanoseconds_per_operation, 0.50);
     std::cout << std::left << std::setw(36) << result.name << std::right
-              << std::fixed << std::setprecision(2) << std::setw(14)
-              << median(result.nanoseconds_per_operation) << std::setw(14)
-              << percentile_95(result.nanoseconds_per_operation)
-              << std::setw(14) << result.nanoseconds_per_operation.front()
-              << std::setw(14) << result.iterations << '\n';
+              << std::fixed << std::setprecision(2) << std::setw(12) << p50
+              << std::setw(12)
+              << percentile(result.nanoseconds_per_operation, 0.95)
+              << std::setw(12)
+              << percentile(result.nanoseconds_per_operation, 0.99)
+              << std::setw(12)
+              << percentile(result.nanoseconds_per_operation, 0.999)
+              << std::scientific << std::setprecision(3) << std::setw(14)
+              << 1'000'000'000.0 / p50 << std::fixed << std::setw(12)
+              << result.iterations << '\n';
     do_not_optimize(result.checksum);
   }
 }
@@ -377,6 +380,31 @@ std::vector<benchmark_result> run_suite(const options& configuration) {
         }
         do_not_optimize(values.data());
         return values.back();
+      }));
+
+  const auto thread_iterations =
+      std::max<std::size_t>(10, configuration.iterations / 10'000);
+
+  results.push_back(run_benchmark(
+      "qos_jthread/start_join",
+      thread_iterations,
+      configuration.samples,
+      [](std::size_t index) {
+        bengal::qos_jthread worker(
+            bengal::qos_class::platform_default, [] {});
+        const auto qos_ok = !worker.qos_status();
+        worker.join();
+        return static_cast<std::uint64_t>(qos_ok) + index;
+      }));
+
+  results.push_back(run_benchmark(
+      "std::thread/start_join",
+      thread_iterations,
+      configuration.samples,
+      [](std::size_t index) {
+        std::thread worker([] {});
+        worker.join();
+        return static_cast<std::uint64_t>(index);
       }));
 
   return results;

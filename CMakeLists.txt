@@ -26,6 +26,11 @@ target_include_directories(
 
 option(BENGAL_BUILD_TESTS "Build Bengal tests" ON)
 option(BENGAL_BUILD_BENCHMARKS "Build Bengal benchmarks" OFF)
+option(
+  BENGAL_BUILD_GOOGLE_BENCHMARKS
+  "Build Bengal Google Benchmark cross-checks"
+  OFF
+)
 option(BENGAL_BUILD_FUZZERS "Build Bengal libFuzzer targets" OFF)
 option(BENGAL_BUILD_EXAMPLES "Build Bengal examples" ON)
 
@@ -44,12 +49,36 @@ if(BUILD_TESTING AND BENGAL_BUILD_TESTS)
 endif()
 
 if(BENGAL_BUILD_BENCHMARKS)
+  find_package(Threads REQUIRED)
+
   add_executable(bengal_benchmarks benchmarks/bengal_benchmarks.cpp)
-  target_link_libraries(bengal_benchmarks PRIVATE Bengal::Core)
+  target_link_libraries(
+    bengal_benchmarks
+    PRIVATE
+      Bengal::Core
+      Threads::Threads
+  )
   target_compile_options(
     bengal_benchmarks
     PRIVATE
       $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic;-Werror>
+  )
+endif()
+
+if(BENGAL_BUILD_GOOGLE_BENCHMARKS)
+  find_package(benchmark CONFIG REQUIRED)
+  find_package(Threads REQUIRED)
+
+  add_executable(
+    bengal_google_benchmarks
+    benchmarks/google_benchmarks.cpp
+  )
+  target_link_libraries(
+    bengal_google_benchmarks
+    PRIVATE
+      Bengal::Core
+      Threads::Threads
+      benchmark::benchmark
   )
 endif()
 

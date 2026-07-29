@@ -13,6 +13,7 @@ latency, trading outcomes, or market-beating performance.
   SSO-capable `std::string` and, when installed, Boost.StaticString.
 - Bounded batches: Bengal PMR storage compared with a heap `std::vector` and
   `std::pmr::monotonic_buffer_resource` backed by local storage.
+- Worker startup: `qos_jthread` compared with `std::thread`.
 - Allocation audit: upstream allocation count and bytes for repeated batches.
 
 The standard PMR comparison is the most important allocator baseline. Beating
@@ -25,7 +26,7 @@ requirements.
 
 ```sh
 make benchmark
-./build/bengal_benchmarks --iterations=1000000 --samples=21
+./build/bengal_benchmarks --iterations=1000000 --samples=1001
 ```
 
 For CMake builds:
@@ -34,6 +35,21 @@ For CMake builds:
 cmake -S . -B build -DBENGAL_BUILD_BENCHMARKS=ON
 cmake --build build --config Release
 ./build/bengal_benchmarks
+```
+
+The native harness reports p50, p95, p99, and p99.9 across the mean
+nanoseconds-per-operation measured in independent samples. These are
+percentiles of sampled run averages, not the latency distribution of
+individual operations. Use at least 1,001 samples when interpreting p99.9.
+
+Google Benchmark cross-checks are optional:
+
+```sh
+cmake -S . -B build \
+  -DBENGAL_BUILD_GOOGLE_BENCHMARKS=ON \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target bengal_google_benchmarks
+./build/bengal_google_benchmarks
 ```
 
 Use a release build. Record the compiler version, flags, CPU model, operating

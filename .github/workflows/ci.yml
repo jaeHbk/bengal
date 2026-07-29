@@ -117,7 +117,13 @@ jobs:
       - name: Install Boost.StaticString
         run: |
           sudo apt-get update
-          sudo apt-get install --yes libboost-dev
+          sudo apt-get install --yes libbenchmark-dev libboost-dev
+
+      - name: Record hardware metadata
+        run: |
+          mkdir -p benchmark-artifacts
+          uname -a | tee benchmark-artifacts/hardware.txt
+          lscpu | tee -a benchmark-artifacts/hardware.txt
 
       - name: Configure
         run: >
@@ -126,10 +132,32 @@ jobs:
           -DBUILD_TESTING=OFF
           -DBENGAL_BUILD_TESTS=OFF
           -DBENGAL_BUILD_BENCHMARKS=ON
+          -DBENGAL_BUILD_GOOGLE_BENCHMARKS=ON
           -DBENGAL_BUILD_EXAMPLES=OFF
 
       - name: Build
-        run: cmake --build build --target bengal_benchmarks --parallel
+        run: cmake --build build --parallel
 
-      - name: Run established baselines
-        run: ./build/bengal_benchmarks --iterations=100000 --samples=5
+      - name: Run native established baselines
+        run: >
+          ./build/bengal_benchmarks
+          --iterations=100000
+          --samples=1001
+          | tee benchmark-artifacts/native-results.txt
+
+      - name: Run Google Benchmark cross-checks
+        run: >
+          ./build/bengal_google_benchmarks
+          --benchmark_min_time=0.05s
+          --benchmark_repetitions=5
+          --benchmark_report_aggregates_only=true
+          --benchmark_out=benchmark-artifacts/google-results.json
+          --benchmark_out_format=json
+          | tee benchmark-artifacts/google-results.txt
+
+      - name: Upload benchmark evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: bengal-performance-${{ github.sha }}
+          path: benchmark-artifacts/
+          if-no-files-found: error
