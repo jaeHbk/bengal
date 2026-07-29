@@ -1,7 +1,8 @@
 # Threading Contract
 
-`bengal::qos_jthread` wraps `std::jthread` and preserves its RAII stop and join
-behavior.
+`bengal::qos_jthread` provides RAII stop and join behavior over `std::thread`.
+It uses `bengal::stop_source` and `bengal::stop_token` because Apple libc++
+does not currently provide the C++20 `std::jthread` family.
 
 ## QoS Startup
 
@@ -23,7 +24,6 @@ efficiency core, provide hard real-time scheduling, or guarantee latency.
 
 ## Callable Behavior
 
-Callables may accept a leading `std::stop_token`, matching `std::jthread`, or
-omit it. Unhandled callable exceptions terminate the process, as with
-`std::thread`.
-
+Callables may accept a leading `bengal::stop_token` or omit it. Destruction
+requests stop and joins a joinable worker. Unhandled callable exceptions
+terminate the process, as with `std::thread`.

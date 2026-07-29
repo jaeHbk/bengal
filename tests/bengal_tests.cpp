@@ -263,7 +263,7 @@ void test_qos_jthread() {
   std::atomic<bool> observed_stop{false};
   bengal::qos_jthread stoppable(
       bengal::qos_class::platform_default,
-      [&observed_stop](std::stop_token token) {
+      [&observed_stop](bengal::stop_token token) {
         while (!token.stop_requested()) {
           std::this_thread::yield();
         }
@@ -272,6 +272,27 @@ void test_qos_jthread() {
   CHECK(stoppable.request_stop());
   stoppable.join();
   CHECK(observed_stop.load());
+
+  bengal::stop_source source;
+  const auto token = source.get_token();
+  CHECK(token.stop_possible());
+  CHECK(!token.stop_requested());
+  CHECK(source.request_stop());
+  CHECK(token.stop_requested());
+  CHECK(!source.request_stop());
+
+  std::atomic<bool> destructor_requested_stop{false};
+  {
+    bengal::qos_jthread scoped(
+        bengal::qos_class::platform_default,
+        [&destructor_requested_stop](bengal::stop_token scoped_token) {
+          while (!scoped_token.stop_requested()) {
+            std::this_thread::yield();
+          }
+          destructor_requested_stop.store(true);
+        });
+  }
+  CHECK(destructor_requested_stop.load());
 
   if constexpr (!bengal::qos_available) {
     bengal::qos_jthread unsupported(

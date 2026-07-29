@@ -14,12 +14,10 @@ performance rather than platform-specific performance claims.
 - `bengal::type_set`: compile-time set union, intersection, and iteration.
 - `bengal::basic_short_string<N>`: fixed-capacity text with no silent overflow.
 - `bengal::static_buffer_resource<N>`: bounded PMR storage with usage metrics.
-- `bengal::qos_jthread`: RAII worker thread with observable Apple QoS startup.
+- `bengal::qos_jthread`: stoppable RAII worker with observable Apple QoS
+  startup.
 
 The library is header-only in the initial release.
-
-Supported toolchains must provide C++20 `std::jthread` and `std::stop_token`.
-Apple builds therefore require Xcode 16 or newer.
 
 ## Build
 
