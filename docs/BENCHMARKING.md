@@ -13,6 +13,7 @@ latency, trading outcomes, or market-beating performance.
   SSO-capable `std::string`.
 - Bounded batches: Bengal PMR storage compared with a heap `std::vector` and
   `std::pmr::monotonic_buffer_resource` backed by local storage.
+- Allocation audit: upstream allocation count and bytes for repeated batches.
 
 The standard PMR comparison is the most important allocator baseline. Beating
 heap allocation alone is not sufficient evidence that Bengal needs a custom

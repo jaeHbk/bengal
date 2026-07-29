@@ -42,6 +42,45 @@ struct trade_state {
   std::uint64_t value{2};
 };
 
+class counting_resource final : public std::pmr::memory_resource {
+ public:
+  explicit counting_resource(
+      std::pmr::memory_resource* upstream =
+          std::pmr::new_delete_resource()) noexcept
+      : upstream_(upstream) {}
+
+  std::size_t allocations() const noexcept {
+    return allocations_;
+  }
+
+  std::size_t allocated_bytes() const noexcept {
+    return allocated_bytes_;
+  }
+
+ private:
+  void* do_allocate(std::size_t bytes, std::size_t alignment) override {
+    void* allocation = upstream_->allocate(bytes, alignment);
+    ++allocations_;
+    allocated_bytes_ += bytes;
+    return allocation;
+  }
+
+  void do_deallocate(void* pointer,
+                     std::size_t bytes,
+                     std::size_t alignment) override {
+    upstream_->deallocate(pointer, bytes, alignment);
+  }
+
+  bool do_is_equal(
+      const std::pmr::memory_resource& other) const noexcept override {
+    return this == &other;
+  }
+
+  std::pmr::memory_resource* upstream_;
+  std::size_t allocations_{0};
+  std::size_t allocated_bytes_{0};
+};
+
 #if defined(__GNUC__) || defined(__clang__)
 template <typename T>
 inline void do_not_optimize(const T& value) {
@@ -176,6 +215,37 @@ void print_results(const std::vector<benchmark_result>& results,
   }
 }
 
+void print_allocation_audit() {
+  constexpr std::size_t operations = 1'000;
+  constexpr std::size_t batch_size = 64;
+
+  counting_resource monotonic_upstream;
+  alignas(std::max_align_t) std::array<std::byte, 4096> storage{};
+  std::pmr::monotonic_buffer_resource monotonic(
+      storage.data(), storage.size(), &monotonic_upstream);
+
+  for (std::size_t operation = 0; operation < operations; ++operation) {
+    monotonic.release();
+    std::pmr::vector<std::uint64_t> values(&monotonic);
+    values.reserve(batch_size);
+    do_not_optimize(values.data());
+  }
+
+  counting_resource heap;
+  for (std::size_t operation = 0; operation < operations; ++operation) {
+    std::pmr::vector<std::uint64_t> values(&heap);
+    values.reserve(batch_size);
+    do_not_optimize(values.data());
+  }
+
+  std::cout << "\nallocation audit (" << operations << " batches)\n"
+            << "bengal_resource_upstream_allocations=0\n"
+            << "std_monotonic_upstream_allocations="
+            << monotonic_upstream.allocations() << '\n'
+            << "pmr_heap_allocations=" << heap.allocations() << '\n'
+            << "pmr_heap_allocated_bytes=" << heap.allocated_bytes() << '\n';
+}
+
 std::vector<benchmark_result> run_suite(const options& configuration) {
   std::vector<benchmark_result> results;
   results.reserve(7);
@@ -297,6 +367,7 @@ int main(int argc, char** argv) {
     const auto configuration = parse_options(argc, argv);
     const auto results = run_suite(configuration);
     print_results(results, configuration);
+    print_allocation_audit();
   } catch (const std::exception& error) {
     std::cerr << "benchmark error: " << error.what() << '\n';
     return 1;
