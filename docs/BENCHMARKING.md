@@ -10,7 +10,7 @@ latency, trading outcomes, or market-beating performance.
 
 - Type lookup: `bengal::type_map` compared with `std::tuple`.
 - Short symbol assignment: `basic_short_string<15>` compared with an
-  SSO-capable `std::string`.
+  SSO-capable `std::string` and, when installed, Boost.StaticString.
 - Bounded batches: Bengal PMR storage compared with a heap `std::vector` and
   `std::pmr::monotonic_buffer_resource` backed by local storage.
 - Allocation audit: upstream allocation count and bytes for repeated batches.

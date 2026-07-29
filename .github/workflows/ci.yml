@@ -105,3 +105,31 @@ jobs:
 
       - name: Fuzz static buffer resource
         run: ./build/bengal_static_buffer_resource_fuzz -runs=25000
+
+  established-baselines:
+    runs-on: ubuntu-latest
+    env:
+      CXX: g++
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Boost.StaticString
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libboost-dev
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DBUILD_TESTING=OFF
+          -DBENGAL_BUILD_TESTS=OFF
+          -DBENGAL_BUILD_BENCHMARKS=ON
+          -DBENGAL_BUILD_EXAMPLES=OFF
+
+      - name: Build
+        run: cmake --build build --target bengal_benchmarks --parallel
+
+      - name: Run established baselines
+        run: ./build/bengal_benchmarks --iterations=100000 --samples=5

@@ -18,6 +18,13 @@
 #include <utility>
 #include <vector>
 
+#if __has_include(<boost/static_string/static_string.hpp>)
+#include <boost/static_string/static_string.hpp>
+#define BENGAL_HAS_BOOST_STATIC_STRING 1
+#else
+#define BENGAL_HAS_BOOST_STATIC_STRING 0
+#endif
+
 namespace {
 
 using clock_type = std::chrono::steady_clock;
@@ -302,6 +309,21 @@ std::vector<benchmark_result> run_suite(const options& configuration) {
         return standard_symbol.size() +
                static_cast<unsigned char>(standard_symbol.front());
       }));
+
+#if BENGAL_HAS_BOOST_STATIC_STRING
+  boost::static_string<15> boost_symbol;
+  results.push_back(run_benchmark(
+      "boost::static_string/assign",
+      configuration.iterations,
+      configuration.samples,
+      [&boost_symbol, &symbols](std::size_t index) {
+        const auto symbol = symbols[index % symbols.size()];
+        boost_symbol.assign(symbol.data(), symbol.size());
+        do_not_optimize(boost_symbol.data());
+        return boost_symbol.size() +
+               static_cast<unsigned char>(boost_symbol.front());
+      }));
+#endif
 
   const auto batch_iterations =
       std::max<std::size_t>(1'000, configuration.iterations / 64);

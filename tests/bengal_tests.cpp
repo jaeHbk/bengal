@@ -301,6 +301,16 @@ void test_qos_jthread() {
           std::make_error_code(std::errc::operation_not_supported));
     unsupported.join();
   }
+
+  if constexpr (bengal::qos_available) {
+    std::atomic<bool> utility_ran{false};
+    bengal::qos_jthread utility(
+        bengal::qos_class::utility,
+        [&utility_ran] { utility_ran.store(true); });
+    CHECK(!utility.qos_status());
+    utility.join();
+    CHECK(utility_ran.load());
+  }
 }
 
 }  // namespace
