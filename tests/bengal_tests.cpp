@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <memory_resource>
 #include <random>
 #include <stdexcept>
@@ -46,6 +47,16 @@ void test_type_map() {
   const auto& const_handlers = handlers;
   const_handlers.for_each([&visits](const auto&) { ++visits; });
   CHECK(visits == 2);
+
+  auto move_only = bengal::make_type_map(std::make_unique<int>(7));
+  CHECK(*move_only.get<std::unique_ptr<int>>() == 7);
+
+  price_handler original{5};
+  auto decayed = bengal::type_map{original};
+  static_assert(std::is_same_v<decltype(decayed),
+                               bengal::type_map<price_handler>>);
+  decayed.get<price_handler>().calls = 8;
+  CHECK(original.calls == 5);
 }
 
 void test_type_set() {
@@ -53,12 +64,15 @@ void test_type_set() {
   using mixed = bengal::type_set<double, char>;
   using combined = bengal::type_set_union_t<numeric, mixed>;
   using shared = bengal::type_set_intersection_t<numeric, mixed>;
+  using duplicate_union =
+      bengal::type_set_union_t<numeric, bengal::type_set<int, double>>;
 
   static_assert(numeric::size == 2);
   static_assert(numeric::contains<int>);
   static_assert(!numeric::contains<char>);
   static_assert(std::is_same_v<combined, bengal::type_set<int, double, char>>);
   static_assert(std::is_same_v<shared, bengal::type_set<double>>);
+  static_assert(std::is_same_v<duplicate_union, numeric>);
 
   int visits = 0;
   bengal::for_each_type(combined{}, [&visits](auto) { ++visits; });
@@ -92,6 +106,13 @@ void test_short_string() {
   CHECK(value.assign_truncated("1234567") == 5);
   CHECK(value.view() == "12345");
 
+  const std::string_view overlapping(value.data() + 1, 3);
+  CHECK(value.try_assign(overlapping));
+  CHECK(value.view() == "234");
+
+  bengal::basic_short_string<8> wider(std::string_view{"234"});
+  CHECK(value == wider);
+
   bool threw = false;
   try {
     value.assign("123456");
@@ -99,7 +120,7 @@ void test_short_string() {
     threw = true;
   }
   CHECK(threw);
-  CHECK(value.view() == "12345");
+  CHECK(value.view() == "234");
 }
 
 void test_short_string_properties() {
@@ -189,6 +210,8 @@ void test_static_buffer_resource() {
   resource.release();
   CHECK(resource.used() == 0);
   CHECK(resource.high_water_mark() == high_water);
+  resource.reset_high_water_mark();
+  CHECK(resource.high_water_mark() == 0);
 
   void* aligned = resource.allocate(1, 64);
   CHECK(reinterpret_cast<std::uintptr_t>(aligned) % 64 == 0);
