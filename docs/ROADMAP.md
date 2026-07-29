@@ -32,7 +32,7 @@ Exit gate: each performance-oriented API has a reproducible baseline.
 ## 0.3: Concurrency and Platform Support
 
 - Evaluate an established bounded SPSC queue implementation.
-- Add thread-startup status reporting and platform capability discovery.
+- Extend thread-startup status reporting and platform capability discovery.
 - Add sustained-load and ThreadSanitizer coverage.
 - Document ownership, thread-safety, and real-time limitations for every API.
 

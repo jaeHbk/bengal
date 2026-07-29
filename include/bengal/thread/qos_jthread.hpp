@@ -2,6 +2,7 @@
 
 #include <cerrno>
 #include <functional>
+#include <future>
 #include <stop_token>
 #include <system_error>
 #include <thread>
@@ -70,29 +71,38 @@ class qos_jthread {
 
   template <typename Func, typename... Args>
   explicit qos_jthread(qos_class qos, Func&& func, Args&&... args)
-      : thread_(
-            [qos, callable = std::forward<Func>(func)](
-                std::stop_token token, auto&&... inner_args) mutable {
-              (void)set_current_thread_qos(qos);
+      : thread_() {
+    std::promise<std::error_code> startup_promise;
+    auto startup_future = startup_promise.get_future();
 
-              if constexpr (std::is_invocable_v<
-                                decltype(callable)&,
-                                std::stop_token,
-                                decltype(inner_args)...>) {
-                std::invoke(callable,
-                            token,
-                            std::forward<decltype(inner_args)>(inner_args)...);
-              } else {
-                static_assert(
-                    std::is_invocable_v<decltype(callable)&,
-                                        decltype(inner_args)...>,
-                    "qos_jthread callable cannot be invoked with its arguments");
-                std::invoke(
-                    callable,
-                    std::forward<decltype(inner_args)>(inner_args)...);
-              }
-            },
-            std::forward<Args>(args)...) {}
+    thread_ = std::jthread(
+        [qos,
+         startup_promise = std::move(startup_promise),
+         callable = std::forward<Func>(func)](
+            std::stop_token token, auto&&... inner_args) mutable {
+          startup_promise.set_value(set_current_thread_qos(qos));
+
+          if constexpr (std::is_invocable_v<
+                            decltype(callable)&,
+                            std::stop_token,
+                            decltype(inner_args)...>) {
+            std::invoke(callable,
+                        token,
+                        std::forward<decltype(inner_args)>(inner_args)...);
+          } else {
+            static_assert(
+                std::is_invocable_v<decltype(callable)&,
+                                    decltype(inner_args)...>,
+                "qos_jthread callable cannot be invoked with its arguments");
+            std::invoke(
+                callable,
+                std::forward<decltype(inner_args)>(inner_args)...);
+          }
+        },
+        std::forward<Args>(args)...);
+
+    qos_status_ = startup_future.get();
+  }
 
   qos_jthread(const qos_jthread&) = delete;
   qos_jthread& operator=(const qos_jthread&) = delete;
@@ -123,6 +133,10 @@ class qos_jthread {
     return thread_.request_stop();
   }
 
+  const std::error_code& qos_status() const noexcept {
+    return qos_status_;
+  }
+
   void join() {
     thread_.join();
   }
@@ -137,7 +151,7 @@ class qos_jthread {
 
  private:
   std::jthread thread_;
+  std::error_code qos_status_;
 };
 
 }  // namespace bengal
-

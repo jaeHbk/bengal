@@ -45,6 +45,17 @@ jobs:
       - name: Verify installation
         run: cmake --install build --prefix build/install
 
+      - name: Configure installed-package consumer
+        run: >
+          cmake -S tests/consumer -B build/consumer
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/install"
+
+      - name: Build installed-package consumer
+        run: cmake --build build/consumer --parallel
+
+      - name: Run installed-package consumer
+        run: ./build/consumer/bengal_consumer
+
   sanitizers:
     runs-on: ubuntu-latest
     env:
@@ -67,4 +78,3 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
-

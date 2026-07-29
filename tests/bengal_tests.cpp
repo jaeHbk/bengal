@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <iostream>
 #include <memory_resource>
+#include <random>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <type_traits>
 #include <vector>
@@ -100,6 +102,76 @@ void test_short_string() {
   CHECK(value.view() == "12345");
 }
 
+void test_short_string_properties() {
+  constexpr std::size_t capacity = 15;
+  bengal::basic_short_string<capacity> value;
+  std::string expected;
+  std::mt19937_64 random(0xBEE6A1ULL);
+
+  const auto random_text = [&random](std::size_t size) {
+    std::string result(size, '\0');
+    for (char& character : result) {
+      character = static_cast<char>('a' + random() % 26);
+    }
+    return result;
+  };
+
+  for (std::size_t iteration = 0; iteration < 10'000; ++iteration) {
+    switch (random() % 6) {
+      case 0: {
+        const auto candidate = random_text(random() % 21);
+        const bool accepted = value.try_assign(candidate);
+        CHECK(accepted == (candidate.size() <= capacity));
+        if (accepted) {
+          expected = candidate;
+        }
+        break;
+      }
+      case 1: {
+        const auto suffix = random_text(random() % 8);
+        const bool accepted = value.try_append(suffix);
+        CHECK(accepted == (expected.size() + suffix.size() <= capacity));
+        if (accepted) {
+          expected += suffix;
+        }
+        break;
+      }
+      case 2: {
+        const char character = static_cast<char>('a' + random() % 26);
+        const bool accepted = value.try_push_back(character);
+        CHECK(accepted == (expected.size() < capacity));
+        if (accepted) {
+          expected.push_back(character);
+        }
+        break;
+      }
+      case 3: {
+        const bool removed = value.pop_back();
+        CHECK(removed == !expected.empty());
+        if (removed) {
+          expected.pop_back();
+        }
+        break;
+      }
+      case 4:
+        value.clear();
+        expected.clear();
+        break;
+      case 5: {
+        const auto candidate = random_text(random() % 21);
+        const auto accepted = value.assign_truncated(candidate);
+        expected = candidate.substr(0, capacity);
+        CHECK(accepted == expected.size());
+        break;
+      }
+    }
+
+    CHECK(value.view() == expected);
+    CHECK(value.size() == expected.size());
+    CHECK(value.c_str()[value.size()] == '\0');
+  }
+}
+
 void test_static_buffer_resource() {
   bengal::static_buffer_resource<256> resource;
 
@@ -131,6 +203,29 @@ void test_static_buffer_resource() {
   CHECK(exhausted);
 }
 
+void test_static_buffer_resource_properties() {
+  bengal::static_buffer_resource<4096> resource;
+  std::mt19937_64 random(0xA110CA7EULL);
+
+  for (std::size_t cycle = 0; cycle < 100; ++cycle) {
+    while (true) {
+      const auto bytes = std::size_t{1} + random() % 64;
+      const auto alignment = std::size_t{1} << (random() % 7);
+      try {
+        void* allocation = resource.allocate(bytes, alignment);
+        CHECK(reinterpret_cast<std::uintptr_t>(allocation) % alignment == 0);
+        CHECK(resource.used() <= resource.capacity());
+      } catch (const std::bad_alloc&) {
+        break;
+      }
+    }
+
+    CHECK(resource.high_water_mark() <= resource.capacity());
+    resource.release();
+    CHECK(resource.used() == 0);
+  }
+}
+
 void test_qos_jthread() {
   std::atomic<int> result{0};
 
@@ -138,6 +233,7 @@ void test_qos_jthread() {
       bengal::qos_class::platform_default,
       [&result](int value) { result.store(value); },
       42);
+  CHECK(!plain.qos_status());
   plain.join();
   CHECK(result.load() == 42);
 
@@ -153,6 +249,14 @@ void test_qos_jthread() {
   CHECK(stoppable.request_stop());
   stoppable.join();
   CHECK(observed_stop.load());
+
+  if constexpr (!bengal::qos_available) {
+    bengal::qos_jthread unsupported(
+        bengal::qos_class::background, [] {});
+    CHECK(unsupported.qos_status() ==
+          std::make_error_code(std::errc::operation_not_supported));
+    unsupported.join();
+  }
 }
 
 }  // namespace
@@ -161,7 +265,9 @@ int main() {
   test_type_map();
   test_type_set();
   test_short_string();
+  test_short_string_properties();
   test_static_buffer_resource();
+  test_static_buffer_resource_properties();
   test_qos_jthread();
 
   if (failures != 0) {
