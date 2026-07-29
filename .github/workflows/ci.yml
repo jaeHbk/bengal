@@ -78,3 +78,30 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  fuzz:
+    runs-on: ubuntu-latest
+    env:
+      CXX: clang++
+      ASAN_OPTIONS: detect_leaks=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBUILD_TESTING=OFF
+          -DBENGAL_BUILD_TESTS=OFF
+          -DBENGAL_BUILD_FUZZERS=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Fuzz short strings
+        run: ./build/bengal_short_string_fuzz -runs=25000
+
+      - name: Fuzz static buffer resource
+        run: ./build/bengal_static_buffer_resource_fuzz -runs=25000

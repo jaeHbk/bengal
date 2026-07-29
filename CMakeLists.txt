@@ -26,6 +26,8 @@ target_include_directories(
 
 option(BENGAL_BUILD_TESTS "Build Bengal tests" ON)
 option(BENGAL_BUILD_BENCHMARKS "Build Bengal benchmarks" OFF)
+option(BENGAL_BUILD_FUZZERS "Build Bengal libFuzzer targets" OFF)
+option(BENGAL_BUILD_EXAMPLES "Build Bengal examples" ON)
 
 if(BUILD_TESTING AND BENGAL_BUILD_TESTS)
   find_package(Threads REQUIRED)
@@ -48,6 +50,65 @@ if(BENGAL_BUILD_BENCHMARKS)
     bengal_benchmarks
     PRIVATE
       $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic;-Werror>
+  )
+endif()
+
+if(BENGAL_BUILD_FUZZERS)
+  if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    message(FATAL_ERROR "Bengal fuzzers currently require Clang")
+  endif()
+
+  add_executable(
+    bengal_short_string_fuzz
+    fuzz/short_string_fuzz.cpp
+  )
+  target_link_libraries(bengal_short_string_fuzz PRIVATE Bengal::Core)
+  target_compile_options(
+    bengal_short_string_fuzz
+    PRIVATE
+      -fsanitize=fuzzer,address,undefined
+      -fno-omit-frame-pointer
+  )
+  target_link_options(
+    bengal_short_string_fuzz
+    PRIVATE
+      -fsanitize=fuzzer,address,undefined
+  )
+
+  add_executable(
+    bengal_static_buffer_resource_fuzz
+    fuzz/static_buffer_resource_fuzz.cpp
+  )
+  target_link_libraries(
+    bengal_static_buffer_resource_fuzz
+    PRIVATE
+      Bengal::Core
+  )
+  target_compile_options(
+    bengal_static_buffer_resource_fuzz
+    PRIVATE
+      -fsanitize=fuzzer,address,undefined
+      -fno-omit-frame-pointer
+  )
+  target_link_options(
+    bengal_static_buffer_resource_fuzz
+    PRIVATE
+      -fsanitize=fuzzer,address,undefined
+  )
+endif()
+
+if(BENGAL_BUILD_EXAMPLES)
+  find_package(Threads REQUIRED)
+
+  add_executable(
+    bengal_bounded_pipeline
+    examples/bounded_pipeline.cpp
+  )
+  target_link_libraries(
+    bengal_bounded_pipeline
+    PRIVATE
+      Bengal::Core
+      Threads::Threads
   )
 endif()
 

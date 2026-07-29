@@ -23,7 +23,7 @@ Exit gate: all tests and sanitizers pass on supported platforms.
   results with Google Benchmark before publication.
 - Compare against standard C++ and established fixed-capacity alternatives.
 - Measure allocation count, throughput, and p50/p95/p99/p99.9 latency.
-- Add fuzzing for fixed-capacity text and allocator operation sequences.
+- Maintain bounded fuzzing for fixed-capacity text and allocator sequences.
 - Retain architecture-specific acceleration only when it improves a published
   workload without changing semantics.
 

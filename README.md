@@ -33,7 +33,11 @@ A dependency-free convenience build is also available:
 ```sh
 make test
 make benchmark
+make example
 ```
+
+Clang-based fuzz targets are available through
+`-DBENGAL_BUILD_FUZZERS=ON`.
 
 ## Design Rules
 
@@ -52,6 +56,8 @@ workload-specific.
 See [docs/ROADMAP.md](docs/ROADMAP.md) and
 [docs/APPLICATIONS.md](docs/APPLICATIONS.md). Benchmark methodology and
 interpretation rules are in [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
+Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md) and
+[docs/THREADING.md](docs/THREADING.md).
 
 ## License
 
