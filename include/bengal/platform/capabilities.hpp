@@ -3,7 +3,7 @@
 namespace bengal {
 
 enum class operating_system {
-  linux,
+  linux_os,
   macos,
   windows,
   unknown,
@@ -27,7 +27,7 @@ constexpr platform_capabilities current_platform_capabilities() noexcept {
 #if defined(__APPLE__)
   return {operating_system::macos, thread_qos_backend::apple};
 #elif defined(__linux__)
-  return {operating_system::linux, thread_qos_backend::none};
+  return {operating_system::linux_os, thread_qos_backend::none};
 #elif defined(_WIN32)
   return {operating_system::windows, thread_qos_backend::none};
 #else

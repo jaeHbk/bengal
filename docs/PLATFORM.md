@@ -8,7 +8,7 @@ and thread-QoS backend implemented by the compiled Bengal headers.
 | Platform | `operating_system` | `thread_qos_backend` |
 |---|---|---|
 | Apple | `macos` | `apple` |
-| Linux | `linux` | `none` |
+| Linux | `linux_os` | `none` |
 | Windows | `windows` | `none` |
 | Other | `unknown` | `none` |
 
