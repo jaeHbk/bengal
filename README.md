@@ -46,6 +46,16 @@ make example
 Clang-based fuzz targets are available through
 `-DBENGAL_BUILD_FUZZERS=ON`.
 
+Installed consumers use the exported target:
+
+```cmake
+find_package(Bengal CONFIG REQUIRED COMPONENTS Core)
+target_link_libraries(my_application PRIVATE Bengal::Core)
+```
+
+Pinned `FetchContent`, source-tree integration, install layouts, and package
+validation are covered in [docs/INSTALLING.md](docs/INSTALLING.md).
+
 ## Design Rules
 
 - No allocation in bounded primitives after construction.
@@ -64,6 +74,9 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) and
 [docs/APPLICATIONS.md](docs/APPLICATIONS.md). Benchmark methodology and
 interpretation rules are in [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
 The intended end product is defined in [docs/PRODUCT.md](docs/PRODUCT.md).
+The public surface is listed in [docs/API.md](docs/API.md), and release
+compatibility rules are in
+[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md),
 [docs/CONCURRENCY.md](docs/CONCURRENCY.md),
 [docs/THREADING.md](docs/THREADING.md), and

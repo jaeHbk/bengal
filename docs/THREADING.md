@@ -26,6 +26,35 @@ The worker still runs when QoS configuration fails. Callers that require a
 specific policy must inspect startup status and decide whether to continue.
 Supported Bengal backends are documented in [PLATFORM.md](PLATFORM.md).
 
+## Lifetime and Ownership
+
+A joinable `qos_jthread` owns its native thread. Destruction and move
+assignment request stop and join before releasing the current thread. A moved
+object remains valid but does not own the transferred thread.
+
+`detach()` deliberately gives up RAII joining. A detached callable may outlive
+the `qos_jthread`, so every captured object must outlive the worker. Callers
+that need to stop a detached worker must retain a copied `stop_source`.
+
+Calling `join()` or `detach()` when the object is not joinable follows
+`std::thread` and throws `std::system_error`. Destroying a joinable
+`qos_jthread` on its own worker thread cannot join safely and terminates
+through the noexcept destructor path; ownership must prevent that situation.
+
+## Stop State
+
+`stop_source` and `stop_token` share a stop state. Constructing a source or the
+`qos_jthread` startup handshake can therefore throw `std::bad_alloc`; native
+thread creation can throw `std::system_error`.
+`request_stop()` is idempotent: exactly one caller observes `true`.
+Exceptions from copying or moving the callable and its arguments propagate
+during construction.
+
+Copies of a source or token may be queried from multiple threads. The stop bit
+is atomic. Operations that mutate the same `qos_jthread` object, including
+`join()`, `detach()`, move assignment, and destruction, require external
+synchronization.
+
 ## Scheduling
 
 Apple QoS is a scheduler hint. It does not pin a worker to a performance or

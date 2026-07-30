@@ -39,6 +39,17 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+      - name: Configure source-tree consumer
+        run: >
+          cmake -S tests/consumer -B build/source-consumer
+          -DBENGAL_SOURCE_DIR="${{ github.workspace }}"
+
+      - name: Build source-tree consumer
+        run: cmake --build build/source-consumer --parallel
+
+      - name: Test source-tree consumer
+        run: ctest --test-dir build/source-consumer --output-on-failure
+
       - name: Benchmark smoke test
         run: ./build/bengal_benchmarks --iterations=10000 --samples=3
 
@@ -54,7 +65,55 @@ jobs:
         run: cmake --build build/consumer --parallel
 
       - name: Run installed-package consumer
-        run: ./build/consumer/bengal_consumer
+        run: ctest --test-dir build/consumer --output-on-failure
+
+  windows-msvc:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Configure source-tree consumer
+        run: >
+          cmake -S tests/consumer -B build/source-consumer
+          -DBENGAL_SOURCE_DIR="${{ github.workspace }}"
+
+      - name: Build source-tree consumer
+        run: cmake --build build/source-consumer --config Release --parallel
+
+      - name: Test source-tree consumer
+        run: >
+          ctest --test-dir build/source-consumer
+          -C Release
+          --output-on-failure
+
+      - name: Verify installation
+        run: cmake --install build --config Release --prefix build/install
+
+      - name: Configure installed-package consumer
+        run: >
+          cmake -S tests/consumer -B build/consumer
+          -DCMAKE_PREFIX_PATH="${{ github.workspace }}/build/install"
+
+      - name: Build installed-package consumer
+        run: cmake --build build/consumer --config Release --parallel
+
+      - name: Test installed-package consumer
+        run: >
+          ctest --test-dir build/consumer
+          -C Release
+          --output-on-failure
 
   sanitizers:
     runs-on: ubuntu-latest

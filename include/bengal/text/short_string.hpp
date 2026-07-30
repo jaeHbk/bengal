@@ -5,6 +5,7 @@
 #include <compare>
 #include <cstddef>
 #include <cstring>
+#include <limits>
 #include <ostream>
 #include <stdexcept>
 #include <string_view>
@@ -13,6 +14,9 @@ namespace bengal {
 
 template <std::size_t Capacity>
 class basic_short_string {
+  static_assert(Capacity < std::numeric_limits<std::size_t>::max(),
+                "basic_short_string capacity is too large");
+
  public:
   using value_type = char;
   using size_type = std::size_t;

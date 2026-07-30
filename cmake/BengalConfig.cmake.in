@@ -1,6 +1,9 @@
 @PACKAGE_INIT@
 
+include(CMakeFindDependencyMacro)
+find_dependency(Threads)
+
 include("${CMAKE_CURRENT_LIST_DIR}/BengalTargets.cmake")
 
+set(Bengal_Core_FOUND TRUE)
 check_required_components(Bengal)
-

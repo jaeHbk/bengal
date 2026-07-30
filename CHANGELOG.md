@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Public compile-time version constants and macros.
+- Public API, installation, and compatibility documentation.
+- Compile-only checks proving every public header is self-contained.
+- Source-tree and installed-package downstream consumer validation.
+- Warning-clean Windows/MSVC build, test, and package-consumer CI.
+
+### Changed
+
+- CMake developer targets and installation now default off when Bengal is
+  included as a subproject.
+- `Bengal::Core` now propagates its standard thread dependency to consumers.
+- Installed package configuration supports the required `Core` component and
+  rejects unknown required components.
+
+The project and public version remain `0.3.0` until downstream integration
+validates the release candidate.
+
 ## 0.3.0 - 2026-07-30
 
 Concurrency and platform-support milestone.

@@ -7,4 +7,4 @@
 #include <bengal/platform/capabilities.hpp>
 #include <bengal/text/short_string.hpp>
 #include <bengal/thread/qos_jthread.hpp>
-
+#include <bengal/version.hpp>
