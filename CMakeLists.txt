@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 
 project(
   Bengal
-  VERSION 0.2.0
+  VERSION 0.3.0
   DESCRIPTION "Predictable-latency C++20 primitives"
   LANGUAGES CXX
 )

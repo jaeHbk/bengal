@@ -70,6 +70,8 @@ Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md),
 [docs/PLATFORM.md](docs/PLATFORM.md).
 Published `0.2` evidence is in
 [docs/PERFORMANCE_0.2.md](docs/PERFORMANCE_0.2.md).
+Published `0.3` validation is in
+[docs/VALIDATION_0.3.md](docs/VALIDATION_0.3.md).
 Release changes are recorded in [CHANGELOG.md](CHANGELOG.md).
 
 ## License

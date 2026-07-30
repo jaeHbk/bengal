@@ -29,7 +29,7 @@ Exit gate: all tests and sanitizers pass on supported platforms.
 
 Exit gate: each performance-oriented API has a reproducible baseline.
 
-## 0.3: Concurrency and Platform Support
+## 0.3: Concurrency and Platform Support (Complete)
 
 - Evaluate an established bounded SPSC queue implementation.
 - Extend thread-startup status reporting and platform capability discovery.
