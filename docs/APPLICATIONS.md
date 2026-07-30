@@ -50,7 +50,10 @@ It must not claim hard real-time behavior.
 
 ## Start Criteria
 
-`bengal-market` starts after Bengal `0.1` is sanitizer-clean and has baseline
-microbenchmarks. The other applications remain planned until they test a
-specific unresolved Bengal design question.
+`bengal-market` starts from a tagged Bengal `0.3` only after the bounded
+pipeline passes sustained-load and ThreadSanitizer validation. Its first
+milestone is capture plus deterministic replay against a standard C++
+baseline, with no order execution.
 
+The other applications remain planned until each tests a specific unresolved
+Bengal design question.

@@ -46,6 +46,19 @@ if(BUILD_TESTING AND BENGAL_BUILD_TESTS)
   )
 
   add_test(NAME bengal_tests COMMAND bengal_tests)
+
+  add_executable(bengal_spsc_stress tests/spsc_queue_stress.cpp)
+  target_link_libraries(
+    bengal_spsc_stress
+    PRIVATE Bengal::Core Threads::Threads
+  )
+  target_compile_options(
+    bengal_spsc_stress
+    PRIVATE
+      $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic;-Werror>
+  )
+  add_test(NAME bengal_spsc_stress COMMAND bengal_spsc_stress)
+  set_tests_properties(bengal_spsc_stress PROPERTIES TIMEOUT 30)
 endif()
 
 if(BENGAL_BUILD_BENCHMARKS)

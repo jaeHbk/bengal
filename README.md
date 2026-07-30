@@ -10,16 +10,20 @@ Bengal is an independent successor project inspired by Tiger's goals. Its
 focus is correctness, portability, explicit failure behavior, and measured
 performance rather than platform-specific performance claims.
 
-## Initial Components
+## Components
 
 - `bengal::type_map`: unique, type-indexed values backed by `std::tuple`.
 - `bengal::type_set`: compile-time set union, intersection, and iteration.
 - `bengal::basic_short_string<N>`: fixed-capacity text with no silent overflow.
 - `bengal::static_buffer_resource<N>`: bounded PMR storage with usage metrics.
+- `bengal::spsc_queue<T, N>`: fixed-capacity one-producer/one-consumer
+  handoff with explicit backpressure.
 - `bengal::qos_jthread`: stoppable RAII worker with observable Apple QoS
   startup.
+- `bengal::current_platform_capabilities()`: compile-time discovery of Bengal's
+  supported platform backends.
 
-The library is header-only in the initial release.
+The library is header-only.
 
 ## Build
 
@@ -52,15 +56,18 @@ Clang-based fuzz targets are available through
 
 ## Status
 
-Bengal is pre-release software. APIs may change before `1.0`, published
-performance claims do not yet exist, and benchmark results remain
-workload-specific.
+Bengal is pre-release software. APIs may change before `1.0`. Published
+performance evidence is workload- and hardware-specific and does not imply
+end-to-end application performance.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) and
 [docs/APPLICATIONS.md](docs/APPLICATIONS.md). Benchmark methodology and
 interpretation rules are in [docs/BENCHMARKING.md](docs/BENCHMARKING.md).
-Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md) and
-[docs/THREADING.md](docs/THREADING.md).
+The intended end product is defined in [docs/PRODUCT.md](docs/PRODUCT.md).
+Runtime contracts are documented in [docs/MEMORY.md](docs/MEMORY.md),
+[docs/CONCURRENCY.md](docs/CONCURRENCY.md),
+[docs/THREADING.md](docs/THREADING.md), and
+[docs/PLATFORM.md](docs/PLATFORM.md).
 Published `0.2` evidence is in
 [docs/PERFORMANCE_0.2.md](docs/PERFORMANCE_0.2.md).
 Release changes are recorded in [CHANGELOG.md](CHANGELOG.md).

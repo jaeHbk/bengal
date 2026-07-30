@@ -249,7 +249,62 @@ void test_static_buffer_resource_properties() {
   }
 }
 
+void test_spsc_queue() {
+  static_assert(bengal::spsc_queue<int, 3>::capacity == 3);
+  static_assert(!std::is_copy_constructible_v<bengal::spsc_queue<int, 3>>);
+
+  bengal::spsc_queue<int, 3> queue;
+  CHECK(queue.empty());
+  CHECK(!queue.full());
+  CHECK(queue.size_approx() == 0);
+
+  CHECK(queue.try_push(1));
+  CHECK(queue.try_emplace(2));
+  CHECK(queue.try_push(3));
+  CHECK(queue.full());
+  CHECK(queue.size_approx() == 3);
+  CHECK(!queue.try_push(4));
+
+  auto first = queue.try_pop();
+  CHECK(first.has_value());
+  CHECK(*first == 1);
+  CHECK(queue.try_push(4));
+
+  CHECK(queue.consume_one([](int& value) { CHECK(value == 2); }));
+  CHECK(queue.size_approx() == 2);
+
+  std::vector<int> drained;
+  while (auto value = queue.try_pop()) {
+    drained.push_back(*value);
+  }
+  CHECK((drained == std::vector<int>{3, 4}));
+  CHECK(queue.empty());
+
+  bengal::spsc_queue<std::unique_ptr<int>, 1> move_only;
+  CHECK(move_only.try_push(std::make_unique<int>(7)));
+  auto moved = move_only.try_pop();
+  CHECK(moved.has_value());
+  CHECK(**moved == 7);
+
+  bengal::spsc_queue<int, 1> exception_queue;
+  CHECK(exception_queue.try_push(9));
+  bool consumer_threw = false;
+  try {
+    exception_queue.consume_one(
+        [](int&) { throw std::runtime_error("consumer failed"); });
+  } catch (const std::runtime_error&) {
+    consumer_threw = true;
+  }
+  CHECK(consumer_threw);
+  auto retained = exception_queue.try_pop();
+  CHECK(retained.has_value());
+  CHECK(*retained == 9);
+}
+
 void test_qos_jthread() {
+  constexpr auto capabilities = bengal::current_platform_capabilities();
+  static_assert(capabilities.supports_thread_qos() == bengal::qos_available);
+
   std::atomic<int> result{0};
 
   bengal::qos_jthread plain(
@@ -257,6 +312,10 @@ void test_qos_jthread() {
       [&result](int value) { result.store(value); },
       42);
   CHECK(!plain.qos_status());
+  CHECK(plain.startup_status().worker_started);
+  CHECK(plain.startup_status().requested_qos ==
+        bengal::qos_class::platform_default);
+  CHECK(plain.startup_status().qos == bengal::qos_outcome::not_requested);
   plain.join();
   CHECK(result.load() == 42);
 
@@ -299,6 +358,11 @@ void test_qos_jthread() {
         bengal::qos_class::background, [] {});
     CHECK(unsupported.qos_status() ==
           std::make_error_code(std::errc::operation_not_supported));
+    CHECK(unsupported.startup_status().worker_started);
+    CHECK(unsupported.startup_status().qos == bengal::qos_outcome::unsupported);
+    CHECK(!unsupported.startup_status().qos_applied());
+    CHECK(unsupported.startup_status().requested_qos ==
+          bengal::qos_class::background);
     unsupported.join();
   }
 
@@ -308,6 +372,9 @@ void test_qos_jthread() {
         bengal::qos_class::utility,
         [&utility_ran] { utility_ran.store(true); });
     CHECK(!utility.qos_status());
+    CHECK(utility.startup_status().worker_started);
+    CHECK(utility.startup_status().qos == bengal::qos_outcome::applied);
+    CHECK(utility.startup_status().qos_applied());
     utility.join();
     CHECK(utility_ran.load());
   }
@@ -322,6 +389,7 @@ int main() {
   test_short_string_properties();
   test_static_buffer_resource();
   test_static_buffer_resource_properties();
+  test_spsc_queue();
   test_qos_jthread();
 
   if (failures != 0) {

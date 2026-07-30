@@ -6,16 +6,25 @@ does not currently provide the C++20 `std::jthread` family.
 
 ## QoS Startup
 
-Construction waits until the new worker attempts QoS configuration.
-`qos_status()` reports that result:
+Construction waits until the new worker completes Bengal's startup handshake.
+`startup_status()` reports:
 
-- success for `platform_default`;
-- the operating-system error when Apple QoS setup fails; or
-- `std::errc::operation_not_supported` for non-default QoS on unsupported
-  platforms.
+- whether the worker reached the handshake;
+- the requested QoS class;
+- a QoS outcome of `not_requested`, `applied`, `unsupported`, or `failed`; and
+- the operating-system error, when present.
+
+`platform_default` produces `not_requested` without an error. A non-default
+class on an unsupported platform produces `unsupported` with
+`std::errc::operation_not_supported`. Successful Apple setup produces
+`applied`; other Apple setup errors produce `failed`.
+
+`qos_status()` remains the compatibility view that returns only the error
+code.
 
 The worker still runs when QoS configuration fails. Callers that require a
-specific policy must inspect `qos_status()` and decide whether to continue.
+specific policy must inspect startup status and decide whether to continue.
+Supported Bengal backends are documented in [PLATFORM.md](PLATFORM.md).
 
 ## Scheduling
 

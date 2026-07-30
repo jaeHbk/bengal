@@ -79,6 +79,28 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+  thread-sanitizer:
+    runs-on: ubuntu-latest
+    env:
+      CXX: g++
+      TSAN_OPTIONS: halt_on_error=1:history_size=7
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-O1 -fsanitize=thread -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
   fuzz:
     runs-on: ubuntu-latest
     env:

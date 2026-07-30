@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bengal/platform/capabilities.hpp>
+
 #include <atomic>
 #include <cerrno>
 #include <functional>
@@ -78,11 +80,26 @@ enum class qos_class {
   background,
 };
 
-#if defined(__APPLE__)
-inline constexpr bool qos_available = true;
-#else
-inline constexpr bool qos_available = false;
-#endif
+inline constexpr bool qos_available =
+    current_platform_capabilities().supports_thread_qos();
+
+enum class qos_outcome {
+  not_requested,
+  applied,
+  unsupported,
+  failed,
+};
+
+struct thread_startup_status {
+  bool worker_started{false};
+  qos_class requested_qos{qos_class::platform_default};
+  qos_outcome qos{qos_outcome::not_requested};
+  std::error_code error{};
+
+  bool qos_applied() const noexcept {
+    return qos == qos_outcome::applied;
+  }
+};
 
 inline std::error_code set_current_thread_qos(qos_class value) noexcept {
   if (value == qos_class::platform_default) {
@@ -116,6 +133,30 @@ inline std::error_code set_current_thread_qos(qos_class value) noexcept {
 #endif
 }
 
+namespace detail {
+
+inline thread_startup_status configure_current_thread(
+    qos_class value) noexcept {
+  thread_startup_status status{
+      true, value, qos_outcome::not_requested, {}};
+  if (value == qos_class::platform_default) {
+    return status;
+  }
+
+  status.error = set_current_thread_qos(value);
+  if (!status.error) {
+    status.qos = qos_outcome::applied;
+  } else if (status.error ==
+             std::make_error_code(std::errc::operation_not_supported)) {
+    status.qos = qos_outcome::unsupported;
+  } else {
+    status.qos = qos_outcome::failed;
+  }
+  return status;
+}
+
+}  // namespace detail
+
 class qos_jthread {
  public:
   using id = std::thread::id;
@@ -126,7 +167,7 @@ class qos_jthread {
   template <typename Func, typename... Args>
   explicit qos_jthread(qos_class qos, Func&& func, Args&&... args)
       : thread_() {
-    std::promise<std::error_code> startup_promise;
+    std::promise<thread_startup_status> startup_promise;
     auto startup_future = startup_promise.get_future();
     auto token = stop_source_.get_token();
 
@@ -138,7 +179,7 @@ class qos_jthread {
          arguments =
              std::tuple<std::decay_t<Args>...>(std::forward<Args>(args)...)]()
             mutable {
-          startup_promise.set_value(set_current_thread_qos(qos));
+          startup_promise.set_value(detail::configure_current_thread(qos));
 
           std::apply(
               [&callable, &token](auto&&... inner_args) {
@@ -164,7 +205,7 @@ class qos_jthread {
               std::move(arguments));
         });
 
-    qos_status_ = startup_future.get();
+    startup_status_ = startup_future.get();
   }
 
   qos_jthread(const qos_jthread&) = delete;
@@ -176,7 +217,7 @@ class qos_jthread {
       stop_and_join();
       thread_ = std::move(other.thread_);
       stop_source_ = std::move(other.stop_source_);
-      qos_status_ = other.qos_status_;
+      startup_status_ = other.startup_status_;
     }
     return *this;
   }
@@ -210,7 +251,11 @@ class qos_jthread {
   }
 
   const std::error_code& qos_status() const noexcept {
-    return qos_status_;
+    return startup_status_.error;
+  }
+
+  const thread_startup_status& startup_status() const noexcept {
+    return startup_status_;
   }
 
   void join() {
@@ -225,7 +270,7 @@ class qos_jthread {
     thread_.swap(other.thread_);
     using std::swap;
     swap(stop_source_, other.stop_source_);
-    swap(qos_status_, other.qos_status_);
+    swap(startup_status_, other.startup_status_);
   }
 
  private:
@@ -238,7 +283,7 @@ class qos_jthread {
 
   std::thread thread_;
   stop_source stop_source_;
-  std::error_code qos_status_;
+  thread_startup_status startup_status_;
 };
 
 }  // namespace bengal
