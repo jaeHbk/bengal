@@ -22,10 +22,10 @@ concept queue_contract =
       { queue.size_approx() } -> std::same_as<typename Queue::size_type>;
     };
 
-static_assert(BENGAL_VERSION_MAJOR == 0);
-static_assert(BENGAL_VERSION_MINOR == 3);
+static_assert(BENGAL_VERSION_MAJOR == 1);
+static_assert(BENGAL_VERSION_MINOR == 0);
 static_assert(BENGAL_VERSION_PATCH == 0);
-static_assert(bengal::version == std::string_view{"0.3.0"});
+static_assert(bengal::version == std::string_view{"1.0.0"});
 
 static_assert(queue_contract<bengal::spsc_queue<int, 8>>);
 static_assert(!std::copyable<bengal::spsc_queue<int, 8>>);

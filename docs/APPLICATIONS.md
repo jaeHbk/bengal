@@ -50,7 +50,7 @@ It must not claim hard real-time behavior.
 
 ## Start Criteria
 
-`bengal-market` starts from a tagged Bengal `0.3` only after the bounded
+`bengal-market` started from tagged Bengal `0.3` after the bounded
 pipeline passes sustained-load and ThreadSanitizer validation. Its first
 milestone is capture plus deterministic replay against a standard C++
 baseline, with no order execution.

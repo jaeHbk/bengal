@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 - 2026-07-30
 
 ### Added
 
@@ -18,8 +18,12 @@
 - Installed package configuration supports the required `Core` component and
   rejects unknown required components.
 
-The project and public version remain `0.3.0` until downstream integration
-validates the release candidate.
+### Validation
+
+- GCC and Clang on Linux, Apple Clang on ARM macOS, and MSVC on Windows.
+- AddressSanitizer, UndefinedBehaviorSanitizer, ThreadSanitizer, and fuzzing.
+- Source-tree and installed-package consumers on every supported platform.
+- `bengal-market` deterministic replay through the fixed-capacity SPSC queue.
 
 ## 0.3.0 - 2026-07-30
 

@@ -6,7 +6,7 @@ int main() {
   static_assert(BENGAL_VERSION_MAJOR == bengal::version_major);
   static_assert(BENGAL_VERSION_MINOR == bengal::version_minor);
   static_assert(BENGAL_VERSION_PATCH == bengal::version_patch);
-  static_assert(bengal::version == "0.3.0");
+  static_assert(bengal::version == "1.0.0");
 
   bengal::basic_short_string<8> symbol(std::string_view{"BENGAL"});
   auto handlers = bengal::type_map{symbol};

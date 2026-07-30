@@ -16,7 +16,7 @@ cmake --install build --prefix /path/to/bengal
 Consume the installation with:
 
 ```cmake
-find_package(Bengal 0.3 CONFIG REQUIRED COMPONENTS Core)
+find_package(Bengal 1 CONFIG REQUIRED COMPONENTS Core)
 target_link_libraries(my_application PRIVATE Bengal::Core)
 ```
 
@@ -32,7 +32,7 @@ include(FetchContent)
 FetchContent_Declare(
   Bengal
   GIT_REPOSITORY https://github.com/jaeHbk/bengal.git
-  GIT_TAG v0.3.0
+  GIT_TAG v1.0.0
   GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(Bengal)
@@ -44,7 +44,7 @@ When Bengal is nested through `FetchContent` or `add_subdirectory`, its tests,
 examples, and installation rules default off. A parent may opt into them with
 `BENGAL_BUILD_TESTS`, `BENGAL_BUILD_EXAMPLES`, and `BENGAL_INSTALL`.
 
-## Pre-release Downstream Validation
+## Downstream Candidate Validation
 
 The repository consumer fixture accepts a local source checkout:
 

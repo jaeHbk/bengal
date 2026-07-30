@@ -66,9 +66,10 @@ validation are covered in [docs/INSTALLING.md](docs/INSTALLING.md).
 
 ## Status
 
-Bengal is pre-release software. APIs may change before `1.0`. Published
-performance evidence is workload- and hardware-specific and does not imply
-end-to-end application performance.
+Bengal 1.x maintains the public source and package contracts documented in
+[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). Published performance evidence
+is workload- and hardware-specific and does not imply end-to-end application
+performance.
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) and
 [docs/APPLICATIONS.md](docs/APPLICATIONS.md). Benchmark methodology and

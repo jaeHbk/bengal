@@ -39,7 +39,7 @@ Exit gate: each performance-oriented API has a reproducible baseline.
 Exit gate: a downstream application can run a bounded pipeline without hidden
 allocation or ambiguous shutdown behavior.
 
-## 1.0: Stable Core
+## 1.0: Stable Core (Delivered)
 
 - Stabilize names and compatibility policy.
 - Publish package-manager integration and API documentation.
