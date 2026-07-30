@@ -60,7 +60,7 @@ function(bengal_enable_warnings target)
     ${target}
     PRIVATE
       $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic;-Werror>
-      $<$<CXX_COMPILER_ID:MSVC>:/W4;/WX;/permissive->
+      $<$<CXX_COMPILER_ID:MSVC>:/W4;/WX;/permissive-;/wd4324>
   )
 endfunction()
 
